@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { ApolloClient, InMemoryCache } from '@apollo/client'
+import { ApolloClient, InMemoryCache, from, ApolloLink } from '@apollo/client'
+import store from '../store'
 
 let apolloClient
 
@@ -7,7 +8,9 @@ function createIsomorphLink() {
   if (typeof window === 'undefined') {
     const { SchemaLink } = require('@apollo/client/link/schema')
     const { schema } = require('./schema')
-    return new SchemaLink({ schema })
+    return new SchemaLink({
+      schema
+    })
   } else {
     const { HttpLink } = require('@apollo/client/link/http')
     return new HttpLink({
@@ -17,11 +20,26 @@ function createIsomorphLink() {
   }
 }
 
+function createHeaderLink() {
+  return new ApolloLink((operation, forward) => {
+    const token = store.getState().user.token
+    operation.setContext((prevContext) => {
+      return {
+        headers: {
+          authorization: token
+        },
+        ...prevContext
+      }
+    })
+    return forward(operation)
+  })
+}
+
 function createApolloClient() {
   return new ApolloClient({
     ssrMode: typeof window === 'undefined',
-    link: createIsomorphLink(),
-    cache: new InMemoryCache(),
+    link: from([createHeaderLink(), createIsomorphLink()]),
+    cache: new InMemoryCache({ addTypename: false })
   })
 }
 

@@ -1,29 +1,71 @@
-# Apollo Server and Client Example
-
-[Apollo](https://www.apollographql.com/client/) is a GraphQL client that allows you to easily query the exact data you need from a GraphQL server. In addition to fetching and mutating data, Apollo analyzes your queries and their results to construct a client-side cache of your data, which is kept up to date as further queries and mutations are run.
-
-In this simple example, we integrate Apollo seamlessly with [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching) to fetch queries in the server and hydrate them in the browser.
-
-## Preview
-
-Preview the example live on [StackBlitz](http://stackblitz.com/):
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/api-routes-apollo-server-and-client)
-
-## Deploy your own
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example):
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/vercel/next.js/tree/canary/examples/api-routes-apollo-server-and-client&project-name=api-routes-apollo-server-and-client&repository-name=api-routes-apollo-server-and-client)
-
-## How to use
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init) or [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/) to bootstrap the example:
-
-```bash
-npx create-next-app --example api-routes-apollo-server-and-client api-routes-apollo-server-and-client-app
-# or
-yarn create next-app --example api-routes-apollo-server-and-client api-routes-apollo-server-and-client-app
+## 指令
+開發環境
+```
+yarn dev
 ```
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+## App 介紹
+- 資料皆為本地 mock 資料
+- 專案參考範例連結建置 https://github.com/vercel/next.js/tree/canary/examples/api-routes-apollo-server-and-client
+- 右上角可切換用戶, 使用預先準備好的 token 來模擬 auth 效果 (重新取得用戶資訊及 Task 資料)
+- 用戶分級:
+```
+UserRole {
+  employee = 'employee', // 員工
+  manager = 'manager', // 主管
+  user = 'user' // 普通用戶
+}
+```
+- 員工可新增 Task 及指定可編輯 Task 狀態的普通用戶
+- 主管可查看員工所有 Task
+- 普通用戶可編輯自己所屬的 Task 狀態
+
+## Schema
+```
+type Query {
+    // 普通用戶
+    usersAvailable: [User]
+    // 用戶個人資訊
+    userInfo: User!
+    // Tasks
+    tasks(startCursor: Int, count: Int): Tasks
+  }
+  type Mutation {
+    // 新增 Task
+    addTask(content: String!, editableBy: [String]): Task
+    // 更新 Task 狀態
+    updateTaskStatus(id: ID!, status: TaskStatus!): Task
+  }
+  type PageInfo {
+    startCursor: String!
+    endCursor: String!
+    totalCount: Int!
+    hasNextPage: Boolean!
+  }
+  type Tasks {
+    items: [Task]!
+    pageInfo: PageInfo
+  }
+  type Task {
+    id: ID!
+    status: TaskStatus!
+    content: String!
+    createdBy: User!
+    editableBy: [User]
+  }
+  type User {
+    name: String!
+    id: ID!
+    role: UserRole!
+  }
+  enum UserRole {
+    manager
+    employee
+    user
+  }
+  enum TaskStatus {
+    done
+    inProgress
+    start
+  }
+```
